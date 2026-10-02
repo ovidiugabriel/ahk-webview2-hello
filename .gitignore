@@ -1,0 +1,16 @@
+# Fetched by install_deps
+/lib/
+
+# Created at runtime
+/logs/
+
+# No binaries in this repository
+*.dll
+*.exe
+*.lib
+*.zip
+*.nupkg
+*.png
+*.chm
+
+*.sublime-workspace

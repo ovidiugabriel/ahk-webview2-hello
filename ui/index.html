@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hello WebView2</title>
+<style>
+  body { font-family: "Segoe UI", sans-serif; background: #f4f6fb; color: #1d2433; margin: 0; padding: 32px; }
+  h1 { margin: 0 0 8px; font-size: 32px; }
+  .card { background: #fff; border-radius: 10px; padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,.08); max-width: 640px; }
+  button { font-size: 15px; padding: 8px 16px; border-radius: 6px; border: 1px solid #3a63d8; background: #3a63d8; color: #fff; cursor: pointer; }
+  #status { margin-top: 12px; font-family: Consolas, monospace; white-space: pre-wrap; }
+  .ok { color: #137a2c; } .bad { color: #b3261e; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1 id="hello">Hello, World!</h1>
+  <p>This page is rendered by WebView2 inside an AutoHotkey v2 window.</p>
+  <button id="btn">Send message to AHK</button>
+  <div id="status">Bridge: waiting for AHK…</div>
+</div>
+<script>
+(function () {
+  const status = document.getElementById('status');
+  const show = (text, cls) => { status.textContent = text; status.className = cls || ''; };
+  const wv = window.chrome && window.chrome.webview;
+  if (!wv) { show('Bridge: window.chrome.webview is unavailable', 'bad'); return; }
+
+  const post = (msg) => wv.postMessage(msg);   // strings -> TryGetWebMessageAsString on the AHK side
+  let manualCount = 0;
+
+  wv.addEventListener('message', (e) => {
+    const parts = String(e.data).split('|');
+    const kind = parts[0], nonce = parts[1];
+    if (kind === 'hello') {
+      // AHK opened the bridge: echo its nonce back with a report on the UI state.
+      const r = document.getElementById('hello').getBoundingClientRect();
+      const visible = document.visibilityState + ',' + Math.round(r.width) + 'x' + Math.round(r.height);
+      show('Bridge: hello received from AHK, sending ping…');
+      post(['ping', nonce, visible, location.protocol].join('|'));
+    } else if (kind === 'pong') {
+      show('Bridge: round trip OK (nonce ' + nonce + ')', 'ok');
+      post('ack|' + nonce);
+    } else if (kind === 'reply') {
+      show('AHK replied: ' + parts.slice(1).join('|'), 'ok');
+    } else {
+      show('Bridge: unexpected message ' + e.data, 'bad');
+    }
+  });
+
+  document.getElementById('btn').addEventListener('click', () => post('click|' + (++manualCount)));
+  post('ready|' + navigator.userAgent);
+})();
+</script>
+</body>
+</html>

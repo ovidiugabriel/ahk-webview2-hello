@@ -1,0 +1,13 @@
+* text=auto
+
+# Windows scripts keep CRLF on checkout (cmd.exe misparses LF-only batch files)
+*.ahk  text eol=crlf
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+
+*.html text
+*.js   text
+*.css  text
+*.md   text
+*.sh   text eol=lf
